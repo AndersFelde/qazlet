@@ -1,0 +1,3 @@
+# No external dependencies needed!
+# Qazlet uses only Python's built-in http.server module
+# Just run: python app.py

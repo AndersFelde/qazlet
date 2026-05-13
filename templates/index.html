@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qazlet - Study Cards</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Qazlet</h1>
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="flipcard">Flipcard</button>
+                <button class="mode-btn" data-mode="quiz">Quiz</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text"><span id="currentIndex">1</span> / <span id="totalCount">0</span></p>
+            </div>
+
+            <!-- Flipcard Mode -->
+            <div class="mode-content" id="flipcardMode">
+                <div class="card" id="flipcard">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <p id="questionText"></p>
+                        </div>
+                        <div class="card-back">
+                            <p id="answerText"></p>
+                        </div>
+                    </div>
+                </div>
+                <p class="hint">Click card to reveal answer</p>
+                <div class="navigation">
+                    <button id="prevBtn" class="nav-btn">← Previous</button>
+                    <button id="nextBtn" class="nav-btn">Next →</button>
+                </div>
+            </div>
+
+            <!-- Quiz Mode -->
+            <div class="mode-content hidden" id="quizMode">
+                <div class="quiz-container">
+                    <h2 id="quizQuestion"></h2>
+                    <div class="options" id="optionsContainer"></div>
+                    <button id="nextQuizBtn" class="nav-btn" disabled>Next →</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="static/script.js"></script>
+</body>
+</html>
