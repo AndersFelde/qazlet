@@ -37,12 +37,18 @@ class QazletHandler(http.server.SimpleHTTPRequestHandler):
             if path == '/' or path == '':
                 path = '/index.html'
             
+            # Map paths to actual file locations
+            if path == '/index.html':
+                requested_file = './templates/index.html'
+            else:
+                requested_file = '.' + path
+            
             # Prevent directory traversal - convert to absolute path and verify it's in current directory
-            requested_file = os.path.normpath('.' + path)
+            requested_file = os.path.normpath(requested_file)
             current_dir = os.path.abspath('.')
             requested_abs = os.path.abspath(requested_file)
             
-            if not requested_abs.startswith(current_dir):
+            if not requested_abs.startswith(current_dir + os.sep) and requested_abs != current_dir:
                 self.send_error(403)
                 return
             
