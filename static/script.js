@@ -4,6 +4,8 @@ let currentIndexQuiz = 0;
 let currentMode = 'flipcard';
 let quizAnswered = false;
 let quizAnswers = {}; // Track quiz answers: {questionIndex: true/false}
+let quizOptionOrder = {}; // Track shuffled order per question index
+let currentQuizCorrectIndex = null;
 
 // Helper functions to get/set current index based on mode
 function getCurrentIndex() {
@@ -75,9 +77,9 @@ function switchMode(mode) {
 
 function initializeMode() {
     if (currentMode === 'flipcard') {
-        showFlipcard();
+        findNextFlipcard();
     } else {
-        showQuiz();
+        findNextQuiz();
     }
     updateProgressBar();
 }
@@ -86,6 +88,7 @@ function showFlipcard() {
     if (questions.length === 0) return;
 
     const currentQ = getCurrentQuestion();
+    if (!currentQ) return;
     if (currentQ.type !== 'flipcard') {
         findNextFlipcard();
         return;
@@ -103,18 +106,24 @@ function showQuiz() {
     if (questions.length === 0) return;
 
     const currentQ = getCurrentQuestion();
+    if (!currentQ) return;
     if (currentQ.type !== 'quiz') {
         findNextQuiz();
         return;
     }
 
     quizAnswered = false;
+    currentQuizCorrectIndex = null;
     document.getElementById('quizQuestion').textContent = currentQ.question;
     
     const optionsContainer = document.getElementById('optionsContainer');
     optionsContainer.innerHTML = '';
     
-    currentQ.options.forEach((option, index) => {
+    const questionIndex = getCurrentIndex();
+    const { options, correctIndex } = getShuffledOptions(questionIndex, currentQ.options, currentQ.correct);
+    currentQuizCorrectIndex = correctIndex;
+
+    options.forEach((option, index) => {
         const optionEl = document.createElement('div');
         optionEl.className = 'option';
         optionEl.textContent = option;
@@ -132,16 +141,16 @@ function selectQuizAnswer(selectedIndex) {
 
     quizAnswered = true;
     const currentQ = getCurrentQuestion();
-    const isCorrect = selectedIndex === currentQ.correct;
+    const isCorrect = selectedIndex === currentQuizCorrectIndex;
     
     // Track the answer
-    quizAnswers[currentIndex] = isCorrect;
+    quizAnswers[getCurrentIndex()] = isCorrect;
     
     const options = document.querySelectorAll('.option');
 
     options.forEach((option, index) => {
         option.classList.add('disabled');
-        if (index === currentQ.correct) {
+        if (index === currentQuizCorrectIndex) {
             option.classList.add('correct');
         } else if (index === selectedIndex) {
             option.classList.add('incorrect');
@@ -152,7 +161,25 @@ function selectQuizAnswer(selectedIndex) {
 }
 
 function getCurrentQuestion() {
-    return questions[currentIndex];
+    return questions[getCurrentIndex()];
+}
+
+function getShuffledOptions(questionIndex, options, correctIndex) {
+    if (quizOptionOrder[questionIndex]) {
+        return quizOptionOrder[questionIndex];
+    }
+
+    const indexedOptions = options.map((option, index) => ({ option, index }));
+    for (let i = indexedOptions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indexedOptions[i], indexedOptions[j]] = [indexedOptions[j], indexedOptions[i]];
+    }
+
+    const shuffledOptions = indexedOptions.map(item => item.option);
+    const shuffledCorrectIndex = indexedOptions.findIndex(item => item.index === correctIndex);
+    const result = { options: shuffledOptions, correctIndex: shuffledCorrectIndex };
+    quizOptionOrder[questionIndex] = result;
+    return result;
 }
 function getQuestionsOfCurrentType() {
     return questions.filter(q => q.type === currentMode);
@@ -206,6 +233,13 @@ function nextCard() {
     if (currentMode === 'flipcard') {
         if (currentIndex < questions.length - 1) {
             setCurrentIndex(currentIndex + 1);
+            const found = findNextFlipcard();
+            if (!found) {
+                setCurrentIndex(0);
+                findNextFlipcard();
+            }
+        } else {
+            setCurrentIndex(0);
             findNextFlipcard();
         }
     } else {
@@ -223,12 +257,18 @@ function nextCard() {
         }
     }
 }
-currentIndex = getCurrentIndex();
+
+function updateNavButtons() {
+    const currentIndex = getCurrentIndex();
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
     
     prevBtn.disabled = currentIndex === 0;
-    nextBtn.disabled = currentIndex === questions.length - 1;
+    if (currentMode === 'flipcard') {
+        nextBtn.disabled = false;
+    } else {
+        nextBtn.disabled = currentIndex === questions.length - 1;
+    }
 }
 
 function updateProgressBar() {
@@ -253,9 +293,7 @@ function updateProgressBar() {
     const progress = (positionInMode / modeQuestions.length) * 100;
     document.getElementById('progressFill').style.width = progress + '%';
     document.getElementById('currentIndex').textContent = positionInMode;
-    document.getElementById('totalCount').textContent = modeQuestions.length
-    document.getElementById('progressFill').style.width = progress + '%';
-    document.getElementById('currentIndex').textContent = currentIndex + 1;
+    document.getElementById('totalCount').textContent = modeQuestions.length;
 }
 
 function showResults() {
@@ -307,6 +345,6 @@ function showResults() {
 function restartQuiz() {
     quizAnswers = {};
     quizAnswered = false;
-    currentIndex = 0;
+    currentIndexQuiz = 0;
     switchMode('quiz');
 }
