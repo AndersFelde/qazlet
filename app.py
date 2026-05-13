@@ -37,31 +37,34 @@ class QazletHandler(http.server.SimpleHTTPRequestHandler):
             if path == '/' or path == '':
                 path = '/index.html'
             
-            # Prevent directory traversal
-            file_path = os.path.normpath('.' + path)
-            if not file_path.startswith('.'):
+            # Prevent directory traversal - convert to absolute path and verify it's in current directory
+            requested_file = os.path.normpath('.' + path)
+            current_dir = os.path.abspath('.')
+            requested_abs = os.path.abspath(requested_file)
+            
+            if not requested_abs.startswith(current_dir):
                 self.send_error(403)
                 return
             
             # Try to find the file
-            if os.path.isfile(file_path):
-                if file_path.endswith('.html'):
+            if os.path.isfile(requested_file):
+                if requested_file.endswith('.html'):
                     self.send_response(200)
                     self.send_header('Content-type', 'text/html')
                     self.end_headers()
-                    with open(file_path, 'rb') as f:
+                    with open(requested_file, 'rb') as f:
                         self.wfile.write(f.read())
-                elif file_path.endswith('.css'):
+                elif requested_file.endswith('.css'):
                     self.send_response(200)
                     self.send_header('Content-type', 'text/css')
                     self.end_headers()
-                    with open(file_path, 'rb') as f:
+                    with open(requested_file, 'rb') as f:
                         self.wfile.write(f.read())
-                elif file_path.endswith('.js'):
+                elif requested_file.endswith('.js'):
                     self.send_response(200)
                     self.send_header('Content-type', 'application/javascript')
                     self.end_headers()
-                    with open(file_path, 'rb') as f:
+                    with open(requested_file, 'rb') as f:
                         self.wfile.write(f.read())
                 else:
                     super().do_GET()
