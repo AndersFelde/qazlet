@@ -20,18 +20,19 @@ class QazletHandler(http.server.SimpleHTTPRequestHandler):
         # API endpoint for loading questions
         if path == '/api/questions':
             self.send_response(200)
-            self.send_header('Content-type', 'application/json')
+            self.send_header('Content-type', 'application/json; charset=utf-8')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             
             try:
                 with open('questions.json', 'r') as f:
                     data = json.load(f)
-                self.wfile.write(json.dumps(data['questions']).encode())
+                payload = json.dumps(data['questions'], ensure_ascii=False).encode('utf-8')
+                self.wfile.write(payload)
             except FileNotFoundError:
-                self.wfile.write(json.dumps([]).encode())
+                self.wfile.write(b'[]')
             except json.JSONDecodeError:
-                self.wfile.write(json.dumps([]).encode())
+                self.wfile.write(b'[]')
         else:
             # Serve static files
             if path == '/' or path == '':
@@ -56,19 +57,19 @@ class QazletHandler(http.server.SimpleHTTPRequestHandler):
             if os.path.isfile(requested_file):
                 if requested_file.endswith('.html'):
                     self.send_response(200)
-                    self.send_header('Content-type', 'text/html')
+                    self.send_header('Content-type', 'text/html; charset=utf-8')
                     self.end_headers()
                     with open(requested_file, 'rb') as f:
                         self.wfile.write(f.read())
                 elif requested_file.endswith('.css'):
                     self.send_response(200)
-                    self.send_header('Content-type', 'text/css')
+                    self.send_header('Content-type', 'text/css; charset=utf-8')
                     self.end_headers()
                     with open(requested_file, 'rb') as f:
                         self.wfile.write(f.read())
                 elif requested_file.endswith('.js'):
                     self.send_response(200)
-                    self.send_header('Content-type', 'application/javascript')
+                    self.send_header('Content-type', 'application/javascript; charset=utf-8')
                     self.end_headers()
                     with open(requested_file, 'rb') as f:
                         self.wfile.write(f.read())
