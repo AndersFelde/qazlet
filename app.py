@@ -25,7 +25,7 @@ class QazletHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             
             try:
-                with open('questions.json', 'r') as f:
+                with open('questions.json', 'r', encoding='utf-8') as f:
                     data = json.load(f)
                 payload = json.dumps(data['questions'], ensure_ascii=False).encode('utf-8')
                 self.wfile.write(payload)
