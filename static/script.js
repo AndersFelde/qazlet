@@ -1,8 +1,22 @@
 let questions = [];
-let currentIndex = 0;
+let currentIndexFlipcard = 0;
+let currentIndexQuiz = 0;
 let currentMode = 'flipcard';
 let quizAnswered = false;
 let quizAnswers = {}; // Track quiz answers: {questionIndex: true/false}
+
+// Helper functions to get/set current index based on mode
+function getCurrentIndex() {
+    return currentMode === 'flipcard' ? currentIndexFlipcard : currentIndexQuiz;
+}
+
+function setCurrentIndex(value) {
+    if (currentMode === 'flipcard') {
+        currentIndexFlipcard = value;
+    } else {
+        currentIndexQuiz = value;
+    }
+}
 
 // Load questions on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -15,7 +29,6 @@ function loadQuestions() {
         .then(response => response.json())
         .then(data => {
             questions = data;
-            updateTotalCount();
             initializeMode();
         })
         .catch(error => console.error('Error loading questions:', error));
@@ -45,9 +58,7 @@ function setupEventListeners() {
 
 function switchMode(mode) {
     currentMode = mode;
-    currentIndex = 0;
     quizAnswered = false;
-    quizAnswers = {}; // Reset answers when switching modes
     
     document.querySelectorAll('.mode-content').forEach(el => {
         el.classList.add('hidden');
@@ -143,38 +154,45 @@ function selectQuizAnswer(selectedIndex) {
 function getCurrentQuestion() {
     return questions[currentIndex];
 }
-
+function getQuestionsOfCurrentType() {
+    return questions.filter(q => q.type === currentMode);
+}
 function findNextFlipcard() {
-    const startIndex = currentIndex;
-    while (currentIndex < questions.length) {
-        if (questions[currentIndex].type === 'flipcard') {
+    const startIndex = getCurrentIndex();
+    let index = startIndex;
+    while (index < questions.length) {
+        if (questions[index].type === 'flipcard') {
+            setCurrentIndex(index);
             showFlipcard();
             return true;
         }
-        currentIndex++;
+        index++;
     }
     // No more flipcards found, revert index
-    currentIndex = startIndex;
+    setCurrentIndex(startIndex);
     return false;
 }
 
 function findNextQuiz() {
-    const startIndex = currentIndex;
-    while (currentIndex < questions.length) {
-        if (questions[currentIndex].type === 'quiz') {
+    const startIndex = getCurrentIndex();
+    let index = startIndex;
+    while (index < questions.length) {
+        if (questions[index].type === 'quiz') {
+            setCurrentIndex(index);
             showQuiz();
             return true;
         }
-        currentIndex++;
+        index++;
     }
     // No more quiz questions found, revert index
-    currentIndex = startIndex;
+    setCurrentIndex(startIndex);
     return false;
 }
 
 function previousCard() {
+    const currentIndex = getCurrentIndex();
     if (currentIndex > 0) {
-        currentIndex--;
+        setCurrentIndex(currentIndex - 1);
         if (currentMode === 'flipcard') {
             findNextFlipcard();
         } else {
@@ -184,15 +202,16 @@ function previousCard() {
 }
 
 function nextCard() {
+    const currentIndex = getCurrentIndex();
     if (currentMode === 'flipcard') {
         if (currentIndex < questions.length - 1) {
-            currentIndex++;
+            setCurrentIndex(currentIndex + 1);
             findNextFlipcard();
         }
     } else {
         // Quiz mode
         if (currentIndex < questions.length - 1) {
-            currentIndex++;
+            setCurrentIndex(currentIndex + 1);
             const found = findNextQuiz();
             if (!found) {
                 // No more quiz questions, show results
@@ -204,8 +223,7 @@ function nextCard() {
         }
     }
 }
-
-function updateNavButtons() {
+currentIndex = getCurrentIndex();
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
     
@@ -214,13 +232,30 @@ function updateNavButtons() {
 }
 
 function updateProgressBar() {
-    const progress = ((currentIndex + 1) / questions.length) * 100;
+    const currentIndex = getCurrentIndex();
+    const modeQuestions = getQuestionsOfCurrentType();
+    
+    if (modeQuestions.length === 0) {
+        document.getElementById('progressFill').style.width = '0%';
+        document.getElementById('currentIndex').textContent = '0';
+        document.getElementById('totalCount').textContent = '0';
+        return;
+    }
+    
+    // Find position of current question in the filtered list
+    let positionInMode = 0;
+    for (let i = 0; i <= currentIndex; i++) {
+        if (questions[i].type === currentMode) {
+            positionInMode++;
+        }
+    }
+    
+    const progress = (positionInMode / modeQuestions.length) * 100;
+    document.getElementById('progressFill').style.width = progress + '%';
+    document.getElementById('currentIndex').textContent = positionInMode;
+    document.getElementById('totalCount').textContent = modeQuestions.length
     document.getElementById('progressFill').style.width = progress + '%';
     document.getElementById('currentIndex').textContent = currentIndex + 1;
-}
-
-function updateTotalCount() {
-    document.getElementById('totalCount').textContent = questions.length;
 }
 
 function showResults() {
@@ -252,7 +287,7 @@ function showResults() {
         resultItem.className = `result-item ${isCorrect ? 'correct' : 'incorrect'}`;
         resultItem.innerHTML = `
             <div class="result-header">
-                <span class="result-icon">${isCorrect ? '✓' : '✗'}</span>
+                Quiz<span class="result-icon">${isCorrect ? '✓' : '✗'}</span>
                 <span class="result-question">${q.question}</span>
             </div>
             <div class="result-details">
