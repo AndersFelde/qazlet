@@ -1,34 +1,23 @@
 # Qazlet
 
-A lightweight, easy-to-host Quizlet alternative built with Python. Study with flashcards or take quizzes with instant feedback.
-
-## Features
-
-- **No Dependencies**: Uses Python's built-in HTTP server
-- **Simple Setup**: Just run `python app.py`
-- **Flipcard Mode**: Click cards to reveal answers  
-- **Quiz Mode**: 4-option multiple choice with instant validation  
-- **Progress Bar**: Visual indicator of progress  
-- **Mode Switching**: Toggle between flipcard and quiz  
-- **Beautiful UI**: Gradient design with smooth animations  
-- **Responsive**: Works on mobile and desktop  
-- **Easy JSON Format**: Edit questions without coding
+A lightweight Quizlet alternative for studying with flashcards and quizzes. No dependencies, no setup—just Python.
 
 ## Quick Start
 
-**No installation needed!** Only Python 3 is required.
-
-### 1. Run the Server
-
+1. Run the server:
 ```bash
 python app.py
 ```
 
-That's it! Open your browser to `http://localhost:5000`
+2. Open `http://localhost:5000` in your browser
 
-### 2. Define Your Questions
+3. Edit `questions.json` to add your questions
 
-Edit `questions.json` and add your questions in the format below:
+4. Refresh the browser to see your questions
+
+## Question Format
+
+Edit `questions.json` with this format:
 
 ```json
 {
@@ -48,144 +37,41 @@ Edit `questions.json` and add your questions in the format below:
 }
 ```
 
-## Question Format
+**Flipcard:** Shows question, click to reveal answer  
+**Quiz:** 4 multiple choice options, auto-validates, shows summary at end
 
-### Flipcard Questions
+The `correct` field is the index (0-3) of the correct option.
 
-```json
-{
-  "type": "flipcard",
-  "question": "Your question here",
-  "answer": "Your answer here"
-}
+## Generate Questions with AI
+
+Copy and paste this entire prompt to ChatGPT, Claude, or any AI. It will generate valid JSON you can paste directly into `questions.json`:
+
 ```
+Generate study questions in JSON format. Return ONLY the JSON, nothing else.
 
-**Fields:**
-- `type`: Must be `"flipcard"`
-- `question`: The text shown on the front of the card
-- `answer`: The text shown when the card is flipped
+Create a mix of flipcard and quiz questions using this exact format:
 
-### Quiz Questions
-
-```json
-{
-  "type": "quiz",
-  "question": "Your question here",
-  "options": [
-    "Option 1",
-    "Option 2",
-    "Option 3",
-    "Option 4"
-  ],
-  "correct": 0
-}
-```
-
-**Fields:**
-- `type`: Must be `"quiz"`
-- `question`: The question to display
-- `options`: Array of exactly 4 answer options
-- `correct`: Index of the correct option (0-based: 0, 1, 2, or 3)
-
-## AI Prompt for Generating Questions
-
-Copy and paste this prompt to ChatGPT, Claude, or any AI to generate questions in the correct format:
-
----
-
-Generate study questions in JSON format for Qazlet. Return ONLY valid JSON, no other text.
-
-Create a mix of flipcard and quiz questions. Use this exact format:
-
-**Flipcard format:**
-```json
-{
-  "type": "flipcard",
-  "question": "question text",
-  "answer": "answer text"
-}
-```
-
-**Quiz format (must have exactly 4 options, one correct answer):**
-```json
-{
-  "type": "quiz",
-  "question": "question text",
-  "options": ["option1", "option2", "option3", "option4"],
-  "correct": 0
-}
-```
-
-Wrap all questions in this structure:
-```json
 {
   "questions": [
-    { question objects here }
+    {
+      "type": "flipcard",
+      "question": "question text",
+      "answer": "answer text"
+    },
+    {
+      "type": "quiz",
+      "question": "question text",
+      "options": ["option1", "option2", "option3", "option4"],
+      "correct": 0
+    }
   ]
 }
+
+The "correct" field is the index (0-3) of the correct answer.
+
+Generate 10 questions about [YOUR TOPIC HERE]. Make them educational.
 ```
 
-Generate [NUMBER] questions about [TOPIC]. Make them educational and clear.
+Replace `[YOUR TOPIC HERE]` with your subject (e.g., "World War 2", "Spanish vocabulary", "Biology photosynthesis").
 
----
-
-**Example usage:**
-- "Generate 10 questions about World War 2"
-- "Generate 5 French vocabulary questions"
-- "Generate 8 biology questions about photosynthesis"
-
-Copy the AI's JSON output directly into `questions.json`.
-
-## How to Use
-
-1. **Mode Selection**: Click "Flipcard" or "Quiz" at the top
-2. **Flipcard Mode**:
-   - Click the card to flip and reveal the answer
-   - Use Previous/Next buttons to navigate
-3. **Quiz Mode**:
-   - Click an option to answer
-   - See instant feedback (correct in green, incorrect in red)
-   - Correct answer is highlighted
-   - Click Next to move to the next question
-
-## Hosting
-
-### Local Network
-```bash
-python app.py
-# Access from other devices: http://YOUR_IP:5000
-```
-
-### Remote Server (e.g., VPS, Cloud)
-- Copy the entire folder to your server
-- Run `python app.py`
-- No installation needed!
-- Works on any server with Python 3 installed
-
-## Project Structure
-
-```
-qazlet/
-├── app.py              # HTTP server
-├── questions.json      # Question definitions (edit this!)
-├── requirements.txt    # Dependencies (empty - no setup needed!)
-├── templates/
-│   └── index.html      # Main page
-└── static/
-    ├── style.css       # Styling
-    └── script.js       # Frontend logic
-```
-
-## Customization
-
-- Edit `questions.json` to add/remove questions
-- Modify `static/style.css` for colors and styling
-- Adjust the gradient colors in the CSS for different themes
-
-## Tips
-
-- Mix flipcard and quiz questions in the same `questions.json`
-- The app automatically filters by mode
-- Progress bar works across all questions in the file
-- Responsive design works on mobile and desktop
-- JSON format is easy to read and edit without programming knowledge
+Copy the JSON output directly into `questions.json` and refresh your browser.

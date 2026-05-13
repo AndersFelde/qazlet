@@ -2,6 +2,7 @@ let questions = [];
 let currentIndex = 0;
 let currentMode = 'flipcard';
 let quizAnswered = false;
+let quizAnswers = {}; // Track quiz answers: {questionIndex: true/false}
 
 // Load questions on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -39,12 +40,14 @@ function setupEventListeners() {
     document.getElementById('prevBtn').addEventListener('click', previousCard);
     document.getElementById('nextBtn').addEventListener('click', nextCard);
     document.getElementById('nextQuizBtn').addEventListener('click', nextCard);
+    document.getElementById('restartBtn').addEventListener('click', restartQuiz);
 }
 
 function switchMode(mode) {
     currentMode = mode;
     currentIndex = 0;
     quizAnswered = false;
+    quizAnswers = {}; // Reset answers when switching modes
     
     document.querySelectorAll('.mode-content').forEach(el => {
         el.classList.add('hidden');
@@ -118,6 +121,11 @@ function selectQuizAnswer(selectedIndex) {
 
     quizAnswered = true;
     const currentQ = getCurrentQuestion();
+    const isCorrect = selectedIndex === currentQ.correct;
+    
+    // Track the answer
+    quizAnswers[currentIndex] = isCorrect;
+    
     const options = document.querySelectorAll('.option');
 
     options.forEach((option, index) => {
@@ -181,6 +189,9 @@ function nextCard() {
         } else {
             findNextQuiz();
         }
+    } else if (currentMode === 'quiz') {
+        // Quiz finished - show results
+        showResults();
     }
 }
 
@@ -200,4 +211,57 @@ function updateProgressBar() {
 
 function updateTotalCount() {
     document.getElementById('totalCount').textContent = questions.length;
+}
+
+function showResults() {
+    // Calculate score
+    const quizQuestions = questions.filter(q => q.type === 'quiz');
+    let correctCount = 0;
+    
+    quizQuestions.forEach((q, idx) => {
+        if (quizAnswers[questions.indexOf(q)] === true) {
+            correctCount++;
+        }
+    });
+    
+    const percentage = Math.round((correctCount / quizQuestions.length) * 100);
+    
+    // Update results display
+    document.getElementById('scorePercentage').textContent = percentage + '%';
+    document.getElementById('scoreText').textContent = `You got ${correctCount} out of ${quizQuestions.length} correct`;
+    
+    // Build results list
+    const resultsList = document.getElementById('resultsList');
+    resultsList.innerHTML = '';
+    
+    quizQuestions.forEach((q, idx) => {
+        const questionIdx = questions.indexOf(q);
+        const isCorrect = quizAnswers[questionIdx];
+        
+        const resultItem = document.createElement('div');
+        resultItem.className = `result-item ${isCorrect ? 'correct' : 'incorrect'}`;
+        resultItem.innerHTML = `
+            <div class="result-header">
+                <span class="result-icon">${isCorrect ? '✓' : '✗'}</span>
+                <span class="result-question">${q.question}</span>
+            </div>
+            <div class="result-details">
+                <p><strong>Correct answer:</strong> ${q.options[q.correct]}</p>
+            </div>
+        `;
+        resultsList.appendChild(resultItem);
+    });
+    
+    // Show results screen
+    document.querySelectorAll('.mode-content').forEach(el => {
+        el.classList.add('hidden');
+    });
+    document.getElementById('resultsMode').classList.remove('hidden');
+}
+
+function restartQuiz() {
+    quizAnswers = {};
+    quizAnswered = false;
+    currentIndex = 0;
+    switchMode('quiz');
 }
