@@ -149,12 +149,13 @@ function findNextFlipcard() {
     while (currentIndex < questions.length) {
         if (questions[currentIndex].type === 'flipcard') {
             showFlipcard();
-            return;
+            return true;
         }
         currentIndex++;
     }
+    // No more flipcards found, revert index
     currentIndex = startIndex;
-    showFlipcard();
+    return false;
 }
 
 function findNextQuiz() {
@@ -162,12 +163,13 @@ function findNextQuiz() {
     while (currentIndex < questions.length) {
         if (questions[currentIndex].type === 'quiz') {
             showQuiz();
-            return;
+            return true;
         }
         currentIndex++;
     }
+    // No more quiz questions found, revert index
     currentIndex = startIndex;
-    showQuiz();
+    return false;
 }
 
 function previousCard() {
@@ -182,16 +184,24 @@ function previousCard() {
 }
 
 function nextCard() {
-    if (currentIndex < questions.length - 1) {
-        currentIndex++;
-        if (currentMode === 'flipcard') {
+    if (currentMode === 'flipcard') {
+        if (currentIndex < questions.length - 1) {
+            currentIndex++;
             findNextFlipcard();
-        } else {
-            findNextQuiz();
         }
-    } else if (currentMode === 'quiz') {
-        // Quiz finished - show results
-        showResults();
+    } else {
+        // Quiz mode
+        if (currentIndex < questions.length - 1) {
+            currentIndex++;
+            const found = findNextQuiz();
+            if (!found) {
+                // No more quiz questions, show results
+                showResults();
+            }
+        } else {
+            // Already at end, show results
+            showResults();
+        }
     }
 }
 
